@@ -1,7 +1,7 @@
 from socket import *
 from termcolor import colored
 
-host = '192.168.0.104'
+host = '192.168.25.8'
 port = 5000
 tcp = socket(AF_INET, SOCK_STREAM)
 dest = (host, port)
@@ -35,14 +35,15 @@ def jogada(posicao, jogador_vez):
     '''Verifica se a posição já foi jogada e realiza a jogada'''
     
     while True:
+        posicao = int(posicao)
         if tabuleiro[posicao] not in [simbolo_jogador_cliente, simbolo_jogador_servidor]:
 
             if jogador_vez == 'servidor':
-                tabuleiro[posicao] = simbolo_jogador_cliente
+                tabuleiro[posicao] = simbolo_jogador_servidor
                 return True
 
             elif jogador_vez == 'cliente':
-                tabuleiro[posicao] = simbolo_jogador_servidor
+                tabuleiro[posicao] = simbolo_jogador_cliente
                 return True
 
             break
@@ -101,6 +102,8 @@ def vencedor():
         horizontal += 3
         vertical += 1
 
+        return 'SemVencedor'
+
 def jogar_novamente(): #como estava repetindo muito criei está função
     '''Verifica se os jogadores querem jogar novamente'''
 
@@ -109,10 +112,10 @@ def jogar_novamente(): #como estava repetindo muito criei está função
 
     print('')
     print('Esperando a resposta de %s! Aguarde...' %jogador_servidor)
-    resposta = conecxao.recv(1024)
+    resposta = tcp.recv(1024)
 
-    envia_escolha = bytes(escolha)
-    conecxao.send(envia_escolha)
+    envia_escolha = bytes(escolha,'utf-8')
+    tcp.send(envia_escolha)
 
     if escolha.upper() == 'S' and resposta == 'S':
         
@@ -131,12 +134,15 @@ def jogar_novamente(): #como estava repetindo muito criei está função
         print('Vitórias de %s = %d' %(jogador_servidor, vitorias_servidor))
         print('Vitórias de %s = %d' %(jogador_cliente, vitorias_cliente))
 
+nome = '?'
+simbolo = '?'
+
 while True:
-    
-    while True:
+
+    while nome == '?':
 
         
-        jogador_cliente = input('Informe o nome do jogar que vai jogar primeiro: ')
+        jogador_cliente = input('Informe o seu nome: ')
 
         if not jogador_cliente.isalpha():
 
@@ -147,27 +153,27 @@ while True:
 
             print('')
             print('Esperando o nome do jogador adversário! Aguarde...')
-            jogador_servidor = conecxao.recv(1024)
-            jogador_servidor = str(jogador_cliente,'utf-8')
+            jogador_servidor = tcp.recv(1024)
+            jogador_servidor = str(jogador_servidor)
 
             envia_nome = jogador_cliente
-            envia_nome = bytes(envia_nome)
-            conecxao.send(envia_nome)
+            envia_nome = bytes(envia_nome,'utf-8')
+            tcp.send(envia_nome)
 
-            break
+            nome = 'sair do laço'
     
-    while True:
+    while simbolo == '?':
 
-        simbolo_jogador_cliente = input('%s Informe se você vai jogar: '%(jogador_cliente))
+        simbolo_jogador_cliente = input('%s escolha o símbolo para suas jogadas na partida: '%jogador_cliente)
         simbolo_jogador_cliente = simbolo_jogador_cliente.upper()
 
         print('Esperando o símbolo que será usado pelo adversário! Aguarde...')
-        simbolo_jogador_servidor = conecxao.recv(1024)
-        simbolo_jogador_servidor = str(simbolo_jogador_servidor, 'utf-8')
+        simbolo_jogador_servidor = tcp.recv(1024)
+        simbolo_jogador_servidor = str(simbolo_jogador_servidor)
 
         enviar_simbolo = simbolo_jogador_cliente
-        enviar_simbolo = bytes(enviar_simbolo)
-        conecxao.send(enviar_simbolo)
+        enviar_simbolo = bytes(enviar_simbolo,'utf-8')
+        tcp.send(enviar_simbolo)
 
     
         if simbolo_jogador_cliente == simbolo_jogador_servidor:
@@ -180,18 +186,19 @@ while True:
             simbolo_jogador_cliente = colored(simbolo_jogador_cliente, 'red')
             simbolo_jogador_servidor = colored(simbolo_jogador_servidor, 'blue')
             print('')
-            break
+            simbolo = 'sair do laço'
 
-    print('Esperando o %s jogar! Aguarde...'%jogador_servidor)
-    posicao_adversario = conecxao.recv(1024)  #recebe a posição que o adversário vai jogar
-    posicao_adversario = str(posicao_adversario, 'utf-8')
-    posicao_adversário = int(posicao_adversario)
-
-    jogada(posicao_adversario, jogador_vez)
-    jogadas += 1
-    
     imprime(tabuleiro_aux)
     imprime(tabuleiro)
+    print('Esperando o %s jogar! Aguarde...'%jogador_servidor)
+
+
+    posicao_adversario = tcp.recv(1024)  #recebe a posição que o adversário vai jogar
+    posicao_adversario = str(posicao_adversario,'utf-8')
+    posicao_adversário = int(posicao_adversario)
+
+    jogada(posicao_adversario, 'servidor')
+    jogadas += 1
 
     venceu = vencedor() 
     
@@ -199,7 +206,7 @@ while True:
 
         imprime(tabuleiro_aux)
         imprime(tabuleiro)
-        print('O jogador %s Ganhou! Você Perdeu!!' %jogador_cliente)
+        print('O jogador %s Ganhou! Você Perdeu!!' %jogador_servidor)
         vitorias_servidor += 1
 
         if jogar_novamente() == True:
@@ -213,7 +220,7 @@ while True:
 
         imprime(tabuleiro_aux)
         imprime(tabuleiro)
-        print('Partida empatada,nenhum vencendor!')
+        print('Partida empatada,nenhum vencedor!')
         empates += 1
 
         if jogar_novamente() == True:
@@ -222,22 +229,19 @@ while True:
         else:
             break
 
-    jogador_vez = tcp.recv(1024)
-    jogador_vez = str(jogador_vez,'utf-8')
-
-    while jogador_vez == 'cliente':
+    while True:
 
         imprime(tabuleiro_aux)
         imprime(tabuleiro)
 
         posicao = input('Escolha, utilizando os números de 1 a 9, em qual posição vai jogar %s: ' %jogador_cliente)
 
-        if posicao in jogadas_possiveis and jogada(posicao, jogador_vez) == True:
+        if posicao in jogadas_possiveis and jogada(posicao, 'cliente') == True:
 
             posicao = int(posicao)
             posicao_enviada = str(posicao)
-            posicao_enviada = bytes(posicao_enviada)
-            conecxao.send(posicao_enviada)  #O cliente vai receber a posição, verificar em vencedor() e retornar o resultado
+            posicao_enviada = bytes(posicao_enviada,'utf-8')
+            tcp.send(posicao_enviada)  #O cliente vai receber a posição, verificar em vencedor() e retornar o resultado
 
             break
 
@@ -258,7 +262,7 @@ while True:
 
         imprime(tabuleiro_aux)
         imprime(tabuleiro)
-        print('Parabéns %s! Você GANHOU!!' %jogador_cliente)
+        print('Parabéns %s! Você GANHOU!!' % jogador_cliente)
         vitorias_cliente += 1
 
         if jogar_novamente() == True:
@@ -272,7 +276,7 @@ while True:
 
         imprime(tabuleiro_aux)
         imprime(tabuleiro)
-        print('Partida empatada,nenhum vencendor!')
+        print('Partida empatada,nenhum vencedor!')
         empates += 1
 
         if jogar_novamente() == True:
