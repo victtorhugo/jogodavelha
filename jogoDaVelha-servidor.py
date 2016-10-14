@@ -1,7 +1,7 @@
 from socket import *
 from termcolor import colored
 
-host = '192.168.25.8'
+host = '192.168.43.201'
 port = 5000
 tcp = socket(AF_INET, SOCK_STREAM)
 dest = (host, port)
@@ -130,7 +130,7 @@ def jogar_novamente(): #como estava repetindo muito criei está função
     if escolha.upper() == 'S' and resposta == 'S':
 
         global jogadas #Renova a contagem de jogadas
-        jogadas = 1
+        jogadas = 0
 
         return True
 
@@ -170,7 +170,7 @@ while True:
 
             print('Esperando o nome do jogador adversário! Aguarde...')
             jogador_cliente = conecxao.recv(1024)
-            jogador_cliente = str(jogador_cliente)
+            jogador_cliente = str(jogador_cliente,'utf-8')
 
             nome = 'Sair do laço'
     
@@ -185,7 +185,7 @@ while True:
         
         print('Esperando o símbolo que será usado pelo adversário! Aguarde...')
         simbolo_jogador_cliente = conecxao.recv(1024)
-        simbolo_jogador_cliente = str(simbolo_jogador_cliente)
+        simbolo_jogador_cliente = str(simbolo_jogador_cliente,'utf-8')
     
         if simbolo_jogador_servidor == simbolo_jogador_cliente:
 
@@ -209,7 +209,7 @@ while True:
 
         if posicao in jogadas_possiveis and jogada(posicao, 'servidor') == True:
 
-            posicao_enviada = str(posicao)
+            posicao_enviada = posicao
             posicao_enviada = bytes(posicao_enviada,'utf-8')
             conecxao.send(posicao_enviada)  #O cliente vai receber a posição, verificar em vencedor() e retornar o resultado
 
