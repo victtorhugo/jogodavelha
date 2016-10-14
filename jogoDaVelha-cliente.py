@@ -164,7 +164,7 @@ while True:
     
     while simbolo == '?':
 
-        simbolo_jogador_cliente = input('%s escolha o seu símbolo do jogo: '%jogador_cliente)
+        simbolo_jogador_cliente = input('%s escolha o símbolo para suas jogadas na partida: '%jogador_cliente)
         simbolo_jogador_cliente = simbolo_jogador_cliente.upper()
 
         print('Esperando o símbolo que será usado pelo adversário! Aguarde...')
