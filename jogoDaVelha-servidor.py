@@ -8,6 +8,8 @@ dest = (host, port)
 tcp.bind(dest)
 tcp.listen(1)
 
+
+"""testando"""
 tabuleiro = ['',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ']
 tabuleiro_aux = ['','1','2','3','4','5','6','7','8','9','2',' ']
 
