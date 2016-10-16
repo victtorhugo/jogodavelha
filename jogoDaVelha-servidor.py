@@ -1,292 +1,116 @@
 from socket import *
 from termcolor import colored
-
-host = '192.168.43.201'
+host = 'localhost'
 port = 5000
 tcp = socket(AF_INET, SOCK_STREAM)
 dest = (host, port)
 tcp.bind(dest)
 tcp.listen(1)
-
-
-"""testando"""
-tabuleiro = ['',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ']
-tabuleiro_aux = ['','1','2','3','4','5','6','7','8','9','2',' ']
-
-jogadas_possiveis = ['1','2','3','4','5','6','7','8','9']
-
-jogadas = 0  #Contador de jogadas
-vitorais_servidor = 0 #Contador de vitorias do jogador servidor
-vitorais_cliente = 0 #Contador de vitorias do jogador cliente
-empates = 0 #Contador de empates
+tabuleiro = [[' ',' ',' '],[' ',' ',' '],[' ',' ',' '],]
+jogadas = [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]]
+transposta = [['','',''],['','','',],['','','']]
+diagonal0 = [] 
+diagonal1 = []
 
 def imprime(tabuleiro):
     '''Interface'''
 
     print('')
     print('\t\t      |     |     ')
-    print('\t\t   %s  |  %s  |  %s '%(tabuleiro[7],tabuleiro[8],tabuleiro[9]))
+    print('\t\t   %s  |  %s  |  %s '%(tabuleiro[2][0],tabuleiro[2][1],tabuleiro[2][2]))
     print('\t\t _____|_____|_____')
     print('\t\t      |     |     ')
-    print('\t\t   %s  |  %s  |  %s '%(tabuleiro[4],tabuleiro[5],tabuleiro[6]))
+    print('\t\t   %s  |  %s  |  %s '%(tabuleiro[1][0],tabuleiro[1][1],tabuleiro[1][2]))
     print('\t\t _____|_____|_____')
     print('\t\t      |     |     ')
-    print('\t\t   %s  |  %s  |  %s '%(tabuleiro[1],tabuleiro[2],tabuleiro[3]))
+    print('\t\t   %s  |  %s  |  %s '%(tabuleiro[0][0],tabuleiro[0][1],tabuleiro[0][2]))
     print('\t\t      |     |     ')
-    print('')
 
-def jogada(posicao, jogador_vez):
-    '''Verifica se a posição já foi jogada e realiza a jogada'''
-
-    while True:
-
-        posicao = int(posicao)
-        if tabuleiro[posicao] not in [simbolo_jogador_servidor, simbolo_jogador_cliente]:
-
-            if jogador_vez == 'servidor':
-                tabuleiro[posicao] = simbolo_jogador_servidor
-                return True
-
-            elif jogador_vez == 'cliente':
-                tabuleiro[posicao] = simbolo_jogador_cliente
-                return True
-
-            break
-
-        else:
-            return False
-
-def vencedor():
-    '''Verifica se tem algum vencedor'''
-    horizontal = 1
-    vertical = 1
-
-    while horizontal <= 7:
-
-        if tabuleiro[horizontal] == tabuleiro[horizontal + 1] and tabuleiro[horizontal + 1] == tabuleiro[
-                    horizontal + 2] and tabuleiro[horizontal + 2] == simbolo_jogador_cliente:  # ganhou na horizontal
-            horizontal = 1
-            return 'cliente'
-            break
-
-        elif tabuleiro[horizontal] == tabuleiro[horizontal + 1] and tabuleiro[horizontal + 1] == tabuleiro[
-                    horizontal + 2] and tabuleiro[horizontal + 2] == simbolo_jogador_servidor:  # ganhou na horizontal
-            horizontal = 1
-            return 'servidor'
-            break
-
-        aux = vertical + 3
-        if tabuleiro[vertical] == tabuleiro[vertical + 3] and tabuleiro[vertical] == tabuleiro[aux + 3] and tabuleiro[
-                    aux + 3] == simbolo_jogador_cliente:  # ganhou na vertical
-            horizontal = 1
-            return 'cliente'
-            break
-
-        elif tabuleiro[vertical] == tabuleiro[vertical + 3] and tabuleiro[vertical] == tabuleiro[aux + 3] and tabuleiro[
-                    aux + 3] == simbolo_jogador_servidor:  # ganhou na vertical
-            horizontal = 1
-            return 'servidor'
-            break
-
-        if tabuleiro[7] == tabuleiro[5] and tabuleiro[5] == tabuleiro[3] and tabuleiro[
-            3] == simbolo_jogador_cliente:  # ganhou na diagonal 1
-            horizontal = 1
-            return 'cliente'
-            break
-
-        elif tabuleiro[7] == tabuleiro[5] and tabuleiro[5] == tabuleiro[3] and tabuleiro[
-            3] == simbolo_jogador_servidor:  # ganhou na diagonal 1
-            horizontal = 1
-            return 'servidor'
-            break
-
-        if tabuleiro[9] == tabuleiro[5] and tabuleiro[5] == tabuleiro[1] and tabuleiro[
-            1] == simbolo_jogador_cliente:  # ganhou na diagonal 2
-            horizontal = 1
-            return 'cliente'
-            break
-
-        elif tabuleiro[9] == tabuleiro[5] and tabuleiro[5] == tabuleiro[1] and tabuleiro[
-            1] == simbolo_jogador_servidor:  # ganhou na diagonal 2
-            horizontal = 1
-            return 'servidor'
-            break
-
-        horizontal += 3
-        vertical += 1
-
-        return 'SemVencedor'
-
-def jogar_novamente(): #como estava repetindo muito criei está função
-    '''Verifica se os jogadores querem jogar novamente'''
-
-    print('')
-    escolha = input('Digite S se quer jogar novamente? Caso contrário, aperte outra tecla: ')
-    envia_escolha = bytes(escolha,'utf-8')
-    conecxao.send(envia_escolha)
-
-    print('')
-    print('Esperando a resposta de %s! Aguarde...' %jogador_cliente)
-    resposta = conecxao.recv(1024)
-
-    if escolha.upper() == 'S' and resposta == 'S':
-
-        global jogadas #Renova a contagem de jogadas
-        jogadas = 0
-
-        return True
-
+def gameWin(simbolo, tabuleiro):
+    diagonal0 = [tabuleiro[0][0], tabuleiro[1][1], tabuleiro[2][2]]
+    diagonal1 = [tabuleiro[2][0], tabuleiro[1][1], tabuleiro[0][2]]
+    for r in tabuleiro:
+        if r == [simbolo] * 3:
+            return True
+        elif diagonal0 == [simbolo] * 3 or diagonal1 == [simbolo] * 3:
+            return True
     else:
-
-        print('O outro jogador desistiu. Fim de Jogo')
-        print('')
-        print('Resultado do game: ')
-        print('')
-        print('Empates: ', empates)
-        print('Vitórias de %s = %d' %(jogador_servidor, vitorais_servidor))
-        print('Vitórias de %s = %d' %(jogador_cliente, vitorais_cliente))
-
-nome = '?'
-simbolo = '?'
-
+        return False
+        
+def transposta_matriz(tabuleiro, transposta):
+    for a in range(3):
+        for b in range(3):
+            transposta[a][b] = tabuleiro[b][a]
+              
+def jogada(posicao_lista, tabuleiro, simbolo):
+    tabuleiro[posicao_lista[0]][posicao_lista[1]] = simbolo
+    
+def gameOver(resposta):
+    resposta = bytes(resposta, 'utf-8')
+    conecxao.send(resposta)
+    resposta_adversario = conecxao.recv(1024)
+    print(resposta_adversario)
+    resposta_adversario = str(resposta_adversario, 'utf-8')
+    if resposta_adversario == 's':
+        return True
+    else: return False
+cont = 0
 while True:
-    
-    while nome == '?':
-        
-        jogador_servidor = input('Informe o seu nome: ')
-    
-        if not jogador_servidor.isalpha():
-
-            print('Informe seu nome corretamente.')
-            print('')
-
-        else:
-
-            print('')
-            print('Esperando o jogador adversário! Aguarde...')
-            conecxao, cliente = tcp.accept()
-
-            envia_nome = jogador_servidor
-            envia_nome = bytes(envia_nome,'utf-8')
-            conecxao.send(envia_nome)
-
-            print('Esperando o nome do jogador adversário! Aguarde...')
-            jogador_cliente = conecxao.recv(1024)
-            jogador_cliente = str(jogador_cliente,'utf-8')
-
-            nome = 'Sair do laço'
-    
-    while simbolo == '?':
-    
-        simbolo_jogador_servidor = input('%s informe o símbolo que você vai jogar: '%(jogador_servidor))
-        simbolo_jogador_servidor = simbolo_jogador_servidor.upper()
-        
-        enviar_simbolo = simbolo_jogador_servidor
-        enviar_simbolo = bytes(enviar_simbolo, 'utf-8')
-        conecxao.send(enviar_simbolo)
-        
-        print('Esperando o símbolo que será usado pelo adversário! Aguarde...')
-        simbolo_jogador_cliente = conecxao.recv(1024)
-        simbolo_jogador_cliente = str(simbolo_jogador_cliente,'utf-8')
-    
-        if simbolo_jogador_servidor == simbolo_jogador_cliente:
-
-            print('O outro jogador escolheu o mesmo Símbolo que você. Informe outro símbolo para continuar o jogo.')
-            print('')
-
-        else:
-
-            simbolo_jogador_servidor = colored(simbolo_jogador_servidor, 'red')
-            simbolo_jogador_cliente = colored(simbolo_jogador_cliente, 'blue')
-            print('')
-
-            simbolo = 'Sair do laço'
-
+    conecxao, cliente = tcp.accept()
     while True:
-
-        imprime(tabuleiro_aux)
-        imprime(tabuleiro)
-
-        posicao = input('Escolha, utilizando os números de 1 a 9, em qual posição vai jogar %s: ' %jogador_servidor)
-
-        if posicao in jogadas_possiveis and jogada(posicao, 'servidor') == True:
-
-            posicao_enviada = posicao
-            posicao_enviada = bytes(posicao_enviada,'utf-8')
-            conecxao.send(posicao_enviada)  #O cliente vai receber a posição, verificar em vencedor() e retornar o resultado
-
-            imprime(tabuleiro_aux)
-            imprime(tabuleiro)
-            jogadas += 1
-
-            venceu = vencedor()
-
-            if venceu == 'servidor':
-
-                imprime(tabuleiro_aux)
+        down_simb = conecxao.recv(1024)
+        nome = input('digite seu nome: ')
+        simbolo = input('%s digite o simbolo: ' % nome)
+        down_simb = str(down_simb, 'utf-8')
+        while True:
+            if down_simb ==simbolo:
+                print('simbolos iguas')
+                simbolo = input('%s digite o simbolo: ' % nome)
+                print('simbolos iguas')
+                continue
+            else:
+                break
+            break
+        simb = bytes(simbolo, 'utf-8')
+        conecxao.send(simb)
+        while True:
+            if cont % 2==0:
                 imprime(tabuleiro)
-                print('Parabéns %s! Você GANHOU!!' %jogador_servidor)
-                vitorais_servidor += 1
-
-                if jogar_novamente() == True:
-                    continue
-                else:
-                    break
-
-            elif jogadas == 9:
-
-                imprime(tabuleiro_aux)
+                posicao = int(input('digite o numero: ')) -1
+                posicao_lista = jogadas[posicao]
+                posicao = bytes(str(posicao),'utf-8')
+                conecxao.send(posicao)
+                jogada(posicao_lista,tabuleiro,simbolo)
                 imprime(tabuleiro)
-                print('Partida empatada,nenhum vencendor!')
-                empates += 1
-
-                if jogar_novamente() == True:
-                    continue
-                else:
+                transposta_matriz(tabuleiro, transposta)
+                if gameWin(simbolo, tabuleiro)== True or gameWin(simbolo, transposta) == True:
+                    print('ganhou')
+                    resposta = input('deseja continuar "s" ou "n": ')
+                    if gameOver(resposta)== True:
+                        tabuleiro = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' '], ]
+                        transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
+                        break
+                    else:
+                        conecxao.close()
+                        break
                     break
-            break
-
-        else:
-
-            imprime(tabuleiro_aux)
-            imprime(tabuleiro)
-            print('Posição Inválida. Informe um número de 1 a 9.')
-
-
-    print('Esperando o %s jogar! Aguarde...' %jogador_cliente)
-
-    posicao_adversario = conecxao.recv(1024) #recebe a posição que o adversário vai jogar
-    posicao_adversario = str(posicao_adversario,'utf-8')
-
-    jogada(posicao_adversario, 'cliente')
-    jogadas += 1
-
-    imprime(tabuleiro_aux)
-    imprime(tabuleiro)
-
-    venceu = vencedor()
-
-    if venceu == 'cliente':
-
-        imprime(tabuleiro_aux)
-        imprime(tabuleiro)
-        print('O jogador %s Ganhou! Você Perdeu!!' %jogador_cliente)
-        vitorais_cliente += 1
-
-        if jogar_novamente() == True:
-            continue
-        else:
-            break
-
-    elif jogadas == 9: #O total de jogadas é 9
-
-        imprime(tabuleiro_aux)
-        imprime(tabuleiro)
-        print('Partida empatada,nenhum vencendor!')
-        empates += 1
-
-        if jogar_novamente() == True:
-            continue
-
-        else:
-            break
+            else:
+                recb_posicao = conecxao.recv(1024)
+                recb_posicao = str(recb_posicao, 'utf-8')
+                recb_posicao = int(recb_posicao)
+                posicao_lista = jogadas[recb_posicao]
+                jogada(posicao_lista,tabuleiro,down_simb)
+                imprime(tabuleiro)
+                transposta_matriz(tabuleiro, transposta)
+                if gameWin(down_simb, tabuleiro)== True or gameWin(down_simb, transposta) == True:
+                    print('o outro ganhou')
+                    resposta = input('deseja contiuar "s" ou "n": ')
+                    if gameOver(resposta)== True:
+                        tabuleiro = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' '], ]
+                        transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
+                        break
+                    else:
+                        conecxao.close()
+                        break
+                    break
+            cont +=1
