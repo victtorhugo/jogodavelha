@@ -91,9 +91,38 @@ class GUI:
             self.update()
         self.app.config(cursor="")
 
+    def update(self):
+        for (x, y) in self.board.fields:
+            text = self.board.fields[x, y]
+            self.buttons[x, y]['text'] = text
+            self.buttons[x, y]['disabledforeground'] = 'black'
+            if text == self.board.empty:
+                self.buttons[x, y]['state'] = 'normal'
+            else:
+                self.buttons[x, y]['state'] = 'disabled'
+        winning = self.board.won()
+        if winning:
+            for x, y in winning:
+                self.buttons[x, y]['disabledforeground'] = 'red'
+            for x, y in self.buttons:
+                self.buttons[x, y]['state'] = 'disabled'
+        for (x, y) in self.board.fields:
+            self.buttons[x, y].update()
 
+    def mainloop(self):
+        self.app.mainloop()
 
-while True:
+print('1 - Jogo Online')
+print('2 - Jogo contra o PC')
+
+modo_jogo = input('Conforme acima, informe 1 ou 2, e escolha o modo para jogar: ')
+
+print('')
+print('Obs.: Caso tenha escolhido contra o PC, mas queira mudar o modo do jogo, '
+      'feche a janela e a opção para mudar o modo irar aparecer!')
+
+while modo_jogo == 1:
+
     while True:
         nome = input('digite seu nome: ')
         simbolo = input('%s digite o simbolo: ' % nome)
@@ -127,7 +156,7 @@ while True:
         else:
             posicao = int(input('digite o numero: ')) -1
             posicao_lista = jogadas[posicao]
-            
+
             posicao = bytes(str(posicao), 'utf-8')
             tcp.send(posicao)
             jogada(posicao_lista, tabuleiro, simbolo)
@@ -144,9 +173,17 @@ while True:
                     print('gameover')
                     tcp.close()
                     break
-                break
         cont +=1
-            
+
+while modo_jogo == 2:
+
+    GUI().mainloop()
+    print('')
+    print('1 - Jogo Online')
+    print('2 - Jogo contra o PC')
+    print('')
+    modo_jogo = input('Conforme acima, informe 1 ou 2, e escolha o modo para jogar: ')
+
                 
             
         
