@@ -179,7 +179,7 @@ while modo_jogo == 1:
                         conecxao.close()
                         break
             cont +=1
-                
+
 while modo_jogo == 2:
 
     GUI().mainloop()
