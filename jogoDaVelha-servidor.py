@@ -1,12 +1,12 @@
 from socket import *
-from termcolor import colored
+
 host = 'localhost'
 port = 5000
 tcp = socket(AF_INET, SOCK_STREAM)
 dest = (host, port)
 tcp.bind(dest)
 tcp.listen(1)
-tabuleiro = [[' ',' ',' '],[' ',' ',' '],[' ',' ',' '],]
+tabuleiro = [['1','2','3'],['4','5','6'],['7','8','9']]
 jogadas = [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]]
 transposta = [['','',''],['','','',],['','','']]
 diagonal0 = [] 
@@ -153,7 +153,7 @@ while modo_jogo == 1:
                     print('ganhou')
                     resposta = input('deseja continuar "s" ou "n": ')
                     if gameOver(resposta)== True:
-                        tabuleiro = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' '], ]
+                        tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
                         transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
                         break
                     else:
@@ -172,7 +172,7 @@ while modo_jogo == 1:
                     print('o outro ganhou')
                     resposta = input('deseja contiuar "s" ou "n": ')
                     if gameOver(resposta)== True:
-                        tabuleiro = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' '], ]
+                        tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
                         transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
                         break
                     else:

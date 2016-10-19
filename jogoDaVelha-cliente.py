@@ -1,5 +1,6 @@
 from socket import *
-from termcolor import colored
+
+
 host = 'localhost'
 port = 5000
 tcp = socket(AF_INET, SOCK_STREAM)
