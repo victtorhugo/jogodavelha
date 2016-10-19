@@ -111,6 +111,7 @@ while modo_jogo == 1:
                 else:
                     print('gameover')
                     tcp.close()
+                    acabou = 1
                     break
 
         else:
@@ -136,8 +137,11 @@ while modo_jogo == 1:
                 else:
                     print('Gameover')
                     tcp.close()
+                    acabou = 1
                     break
         cont +=1
+    if acabou == 1:
+        break
 
 while modo_jogo == 2:
 

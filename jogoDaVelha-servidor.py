@@ -116,14 +116,18 @@ while modo_jogo == 1:
                 if gameWin(simbolo, tabuleiro)== True or gameWin(simbolo, transposta) == True:
                     print('%s ganhou' %nome)
                     resposta = input('Deseja continuar "s" ou "n": ')
+                    if resposta == 's':
+                        cont = 1
+
                     if gameOver(resposta) == True:
                         tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
                         transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
                         break
                     else:
                         conecxao.close()
+                        acabou = 1
                         break
-                    break
+
             else:
                 print('Esperando a jogada de %s...' %down_nome)
                 recb_posicao = conecxao.recv(1024)
@@ -142,8 +146,11 @@ while modo_jogo == 1:
                         break
                     else:
                         conecxao.close()
+                        acabou = 1
                         break
             cont +=1
+        if acabou == 1:
+            break
   
 while modo_jogo == 2:
 
