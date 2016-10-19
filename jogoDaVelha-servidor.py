@@ -1,12 +1,14 @@
 from socket import *
 from termcolor import colored
+from minmax import *
+
 host = 'localhost'
 port = 5000
 tcp = socket(AF_INET, SOCK_STREAM)
 dest = (host, port)
 tcp.bind(dest)
 tcp.listen(1)
-tabuleiro = [[' ',' ',' '],[' ',' ',' '],[' ',' ',' '],]
+tabuleiro = [['1','2','3'],['4','5','6'],['7','8','9']]
 jogadas = [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]]
 transposta = [['','',''],['','','',],['','','']]
 diagonal0 = [] 
@@ -43,7 +45,10 @@ def transposta_matriz(tabuleiro, transposta):
             transposta[a][b] = tabuleiro[b][a]
               
 def jogada(posicao_lista, tabuleiro, simbolo):
-    tabuleiro[posicao_lista[0]][posicao_lista[1]] = simbolo
+    if tabuleiro[posicao_lista[0]][posicao_lista[1]] in ['1','2','3','4','5','6','7','8','9']:
+        tabuleiro[posicao_lista[0]][posicao_lista[1]] = simbolo
+        return True
+    return False
     
 def gameOver(resposta):
     resposta = bytes(resposta, 'utf-8')
@@ -56,65 +61,10 @@ def gameOver(resposta):
     else: return False
 cont = 0
 
-#################Interface MinMax##############################
-class GUI:
-    def __init__(self):
-        self.app = Tk()
-        self.app.title('Jogo da Velha - MinMax')
-        self.app.resizable(width=False, height=False)
-        self.board = Board()
-        self.font = Font(family="Helvetica", size=32)
-        self.buttons = {}
-        for x, y in self.board.fields:
-            handler = lambda x=x, y=y: self.move(x, y)
-            button = Button(self.app, command=handler, font=self.font, width=2, height=1)
-            button.grid(row=y, column=x)
-            self.buttons[x, y] = button
-        handler = lambda: self.reset()
-        button = Button(self.app, text='reset', command=handler)
-        button.grid(row=self.board.size + 1, column=0, columnspan=self.board.size, sticky="WE")
-        self.update()
-
-    def reset(self):
-        self.board = Board()
-        self.update()
-
-    def move(self, x, y):
-        self.app.config(cursor="watch")
-        self.app.update()
-        self.board = self.board.move(x, y)
-        self.update()
-        move = self.board.best()
-        if move:
-            self.board = self.board.move(*move)
-            self.update()
-        self.app.config(cursor="")
-
-    def update(self):
-        for (x, y) in self.board.fields:
-            text = self.board.fields[x, y]
-            self.buttons[x, y]['text'] = text
-            self.buttons[x, y]['disabledforeground'] = 'black'
-            if text == self.board.empty:
-                self.buttons[x, y]['state'] = 'normal'
-            else:
-                self.buttons[x, y]['state'] = 'disabled'
-        winning = self.board.won()
-        if winning:
-            for x, y in winning:
-                self.buttons[x, y]['disabledforeground'] = 'red'
-            for x, y in self.buttons:
-                self.buttons[x, y]['state'] = 'disabled'
-        for (x, y) in self.board.fields:
-            self.buttons[x, y].update()
-
-    def mainloop(self):
-        self.app.mainloop()
-
 print('1 - Jogo Online')
 print('2 - Jogo contra o PC')
 
-modo_jogo = input('Conforme acima, informe 1 ou 2, e escolha o modo para jogar: ')
+modo_jogo = int(input('Conforme acima, informe 1 ou 2, e escolha o modo para jogar: '))
 
 print('')
 print('Obs.: Caso tenha escolhido contra o PC, mas queira mudar o modo do jogo, '
@@ -124,36 +74,50 @@ while modo_jogo == 1:
 
     while True:
         conecxao, cliente = tcp.accept()
-        down_simb = conecxao.recv(1024)
         nome = input('digite seu nome: ')
         simbolo = input('%s digite o simbolo: ' % nome)
+
+        print('Esperando o nome do adversário... Aguarde...')
+        down_nome = conecxao.recv(1024)
+        down_nome = str(down_nome, 'utf-8')
+
+        envia_nome = bytes(envia_nome, 'utf-8')
+        tcp.send(envia_nome)
+
+        print('Esperando o símbolo do adversário... Aguarde...')
+        down_simb = conecxao.recv(1024)
         down_simb = str(down_simb, 'utf-8')
+
         while True:
-            if down_simb ==simbolo:
-                print('simbolos iguas')
-                simbolo = input('%s digite o simbolo: ' % nome)
-                print('simbolos iguas')
+            if down_simb == simbolo:
+                print('Os símbolos iguais. Escolha outro símbolo.')
+                simbolo = input('%s digite o simbolo: ' %nome)
                 continue
             else:
                 break
-            break
+
         simb = bytes(simbolo, 'utf-8')
         conecxao.send(simb)
         while True:
-            if cont % 2==0:
+            if cont % 2 == 0:
+
+                while True:
+                    posicao = int(input('Digite a posição(1 a 9) da jogada: ')) - 1
+                    if jogada(posicao_lista, tabuleiro, simbolo) == False:
+                        continue
+                    break
+
                 imprime(tabuleiro)
-                posicao = int(input('digite o numero: ')) -1
                 posicao_lista = jogadas[posicao]
                 posicao = bytes(str(posicao),'utf-8')
                 conecxao.send(posicao)
-                jogada(posicao_lista,tabuleiro,simbolo)
-                imprime(tabuleiro)
                 transposta_matriz(tabuleiro, transposta)
+
                 if gameWin(simbolo, tabuleiro)== True or gameWin(simbolo, transposta) == True:
-                    print('ganhou')
-                    resposta = input('deseja continuar "s" ou "n": ')
-                    if gameOver(resposta)== True:
-                        tabuleiro = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' '], ]
+                    print('%s ganhou' %nome)
+                    resposta = input('Deseja continuar "s" ou "n": ')
+                    if gameOver(resposta) == True:
+                        tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
                         transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
                         break
                     else:
@@ -161,6 +125,7 @@ while modo_jogo == 1:
                         break
                     break
             else:
+                print('Esperando a jogada de %s...' %down_nome)
                 recb_posicao = conecxao.recv(1024)
                 recb_posicao = str(recb_posicao, 'utf-8')
                 recb_posicao = int(recb_posicao)
@@ -169,10 +134,10 @@ while modo_jogo == 1:
                 imprime(tabuleiro)
                 transposta_matriz(tabuleiro, transposta)
                 if gameWin(down_simb, tabuleiro)== True or gameWin(down_simb, transposta) == True:
-                    print('o outro ganhou')
-                    resposta = input('deseja contiuar "s" ou "n": ')
+                    print('%s ganhou' %down_nome)
+                    resposta = input('Deseja continuar "s" ou "n": ')
                     if gameOver(resposta)== True:
-                        tabuleiro = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' '], ]
+                        tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
                         transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
                         break
                     else:
@@ -187,4 +152,4 @@ while modo_jogo == 2:
     print('1 - Jogo Online')
     print('2 - Jogo contra o PC')
     print('')
-    modo_jogo = input('Conforme acima, informe 1 ou 2, e escolha o modo para jogar: ')
+    modo_jogo = int(input('Conforme acima, informe 1 ou 2, e escolha o modo para jogar: '))
