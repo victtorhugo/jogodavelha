@@ -2,8 +2,9 @@ from socket import *
 from termcolor import colored
 from minmax import *
 
-host = 'localhost'
-port = 5000
+
+host = "192.168.43.201"
+port = 8000
 tcp = socket(AF_INET, SOCK_STREAM)
 dest = (host, port)
 tcp.connect(dest)
@@ -12,6 +13,7 @@ jogadas = [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2
 transposta = [['','',''],['','','',],['','','']]
 diagonal0 = [] 
 diagonal1 = []
+acabou = 0
 
     
 def imprime(tabuleiro):
@@ -52,37 +54,47 @@ def jogada(posicao_lista, tabuleiro, simbolo):
     return False
     
 def gameOver(resposta):
+    print('Esperando a resposta de %s' % down_nome)
     resposta_adversario = tcp.recv(1024)
     resposta_adversario = str(resposta_adversario, 'utf-8')
-    print(resposta_adversario)
     resposta = bytes(resposta, 'utf-8')
     tcp.send(resposta)
     if resposta_adversario == 's':
         return True
     else: return False
 
-print('1 - Jogo Online')
-print('2 - Jogo contra o PC')
 
-modo_jogo = input('Conforme acima, informe 1 ou 2, e escolha o modo para jogar: ')
+while True:
 
-print('')
-print('Obs.: Caso tenha escolhido contra o PC, mas queira mudar o modo do jogo, '
-      'feche a janela e a opção para mudar o modo irar aparecer!')
+    print('1 - Jogo Online')
+    print('2 - Jogo contra o PC')
+    try:
+        modo_jogo = int(input('Conforme acima, informe 1 ou 2, e escolha o modo para jogar: '))
+
+        if modo_jogo not in [1,2]:
+            continue
+        print('')
+        print('Obs.: Caso tenha escolhido contra o PC, mas queira mudar o modo do jogo, '
+              'feche a janela e a opção para mudar o modo irar aparecer!')
+        break
+    except:
+          print('Opção inválida!')
+
 
 while modo_jogo == 1:
 
     while True:
         nome = input('digite seu nome: ')
-        envia_nome = nome
-        envia_nome = bytes(envia_nome, 'utf-8')
+        simbolo = input('%s digite o simbolo: ' %nome)
+        simbolo = simbolo.upper()
+
+        envia_nome = bytes(nome, 'utf-8')
         tcp.send(envia_nome)
 
         print('Esperando o nome do adversário... Aguarde...')
         down_nome = tcp.recv(1024)
         down_nome = str(down_nome, 'utf-8')
 
-        simbolo = input('%s digite o simbolo: ' %nome)
         simb = bytes(simbolo, 'utf-8')
         tcp.send(simb)
 
@@ -104,10 +116,11 @@ while modo_jogo == 1:
             if gameWin(down_simb, tabuleiro) == True or gameWin(down_simb, transposta) == True:
                 print ('%s ganhou!' %down_nome)
                 resposta = input('Deseja continuar "s" ou "n": ')
+                print('Esperando a resposta de %s'%down_nome)
                 if gameOver(resposta) == True:
                     tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
                     transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
-                    break
+
                 else:
                     print('gameover')
                     tcp.close()
@@ -115,11 +128,23 @@ while modo_jogo == 1:
                     break
 
         else:
+
             while True:
-                posicao = int(input('Digite a posição(1 a 9) da jogada: ')) - 1
-                if jogada(posicao_lista, tabuleiro, simbolo) == False:
-                    continue
-                break
+
+                while True:
+                    try:
+                        posicao = int(input('Digite a posição(1 a 9) da jogada: ')) - 1
+                        if posicao < 0 or posicao > 8:
+                           print('Posição inexistente. Informe um número de 1 a 9.')
+                           continue
+                    except:
+                        print('Posição inexistente. Informe um número de 1 a 9.')
+                        continue
+
+                    posicao_lista = jogadas[posicao]
+                    if jogada(posicao_lista, tabuleiro, simbolo) == False:
+                        continue
+                    break # corrigir a entrada da posição do cliente
 
             imprime(tabuleiro)
             transposta_matriz(tabuleiro, transposta)
@@ -133,7 +158,7 @@ while modo_jogo == 1:
                 if gameOver(resposta) == True:
                     tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
                     transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
-                    break
+
                 else:
                     print('Gameover')
                     tcp.close()
@@ -146,11 +171,20 @@ while modo_jogo == 1:
 while modo_jogo == 2:
 
     GUI().mainloop()
-    print('')
-    print('1 - Jogo Online')
-    print('2 - Jogo contra o PC')
-    print('')
-    modo_jogo = input('Conforme acima, informe 1 ou 2, e escolha o modo para jogar: ')
+    while True:
+        print('1 - Jogo Online')
+        print('2 - Jogo contra o PC')
+        try:
+            modo_jogo = int(input('Conforme acima, informe 1 ou 2, e escolha o modo para jogar: '))
+
+            if modo_jogo == '1' or modo_jogo == '2':
+                continue
+            print('')
+            print('Obs.: Caso tenha escolhido contra o PC, mas queira mudar o modo do jogo, '
+                  'feche a janela e a opção para mudar o modo irar aparecer!')
+            break
+        except:
+            print('Opção inválida!')
 
                 
             
