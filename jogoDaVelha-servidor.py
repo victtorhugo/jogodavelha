@@ -2,18 +2,11 @@ from socket import *
 from termcolor import colored
 from minmax import *
 
-host = '192.168.43.201'
-port = 8000
-tcp = socket(AF_INET, SOCK_STREAM)
-dest = (host, port)
-tcp.bind(dest)
-tcp.listen(1)
 tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
 jogadas = [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]]
-transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
+transposta = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
 diagonal0 = []
 diagonal1 = []
-
 
 def imprime(tabuleiro):
     '''Interface'''
@@ -61,31 +54,37 @@ def gameOver(resposta):
     conecxao.send(resposta)
     resposta_adversario = conecxao.recv(1024)
     resposta_adversario = str(resposta_adversario, 'utf-8')
-    if resposta_adversario == 's':
-        return True
-    else:
-        return False
 
+    if resposta_adversario.upper() == 'S':
+        return True
+
+    return False
 
 cont = 0
 acabou = 0
+
 while True:
     print('1 - Jogo Online')
     print('2 - Jogo contra o PC')
     try:
         modo_jogo = int(input('Conforme acima, informe 1 ou 2, e escolha o modo para jogar: '))
         if modo_jogo not in [1, 2]:
+            print('')
             print('Opção inválida. Informe modo 1 ou modo 2.')
             continue
-
-        print('')
-        print('Obs.: Caso tenha escolhido contra o PC, mas queira mudar o modo do jogo, '
-              'feche a janela e a opção para mudar o modo irar aparecer!')
         break
     except:
+        print('')
         print('Opção inválido. Informe modo 1 ou modo 2.')
 
 while modo_jogo == 1:
+
+    host = '192.168.0.107'
+    port = 3000
+    tcp = socket(AF_INET, SOCK_STREAM)
+    dest = (host, port)
+    tcp.bind(dest)
+    tcp.listen(1)
 
     while True:
         conecxao, cliente = tcp.accept()
@@ -130,49 +129,65 @@ while modo_jogo == 1:
 
                     posicao_lista = jogadas[posicao]
                     if jogada(posicao_lista, tabuleiro, simbolo) == False:
+                        print('Posição já jogada. Escolha outra posição.')
                         continue
                     break
 
-                imprime(tabuleiro)
                 posicao = bytes(str(posicao), 'utf-8')
                 conecxao.send(posicao)
                 transposta_matriz(tabuleiro, transposta)
 
                 if gameWin(simbolo, tabuleiro) == True or gameWin(simbolo, transposta) == True:
-                    print('%s ganhou' % nome)
-                    resposta = input('Deseja continuar "s" ou "n": ')
-                    print('Esperando a resposta de %s... Aguarde...' % down_nome)
-                    if resposta == 's':
-                        cont = 1
+                    imprime(tabuleiro)
+                    print('%s ganhou!' % nome)
+                    resposta = input('Deseja continuar jogando? Se sim digite s, caso contrário aperte qualquer tecla: ')
+                    print('Esperando a resposta de %s... Aguarde...' %down_nome)
 
-                    if gameOver(resposta) == True:
-                        tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
-                        transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
-                    else:
+                    if resposta.upper() != 'S':
                         conecxao.close()
+                        print('O jogo acabou.')
                         acabou = 1
                         break
 
+                    if gameOver(resposta) == True:
+                        cont = 0
+                        tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
+                        transposta = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
+                    else:
+                        conecxao.close()
+                        print('%s parou de jogar.' %down_nome)
+                        acabou = 1
+                        break
             else:
+                imprime(tabuleiro)
                 print('Esperando a jogada de %s...' % down_nome)
                 recb_posicao = conecxao.recv(1024)
                 recb_posicao = str(recb_posicao, 'utf-8')
                 recb_posicao = int(recb_posicao)
                 posicao_lista = jogadas[recb_posicao]
                 jogada(posicao_lista, tabuleiro, down_simb)
-                imprime(tabuleiro)
+                #imprime(tabuleiro)
                 transposta_matriz(tabuleiro, transposta)
                 if gameWin(down_simb, tabuleiro) == True or gameWin(down_simb, transposta) == True:
+
                     print('%s ganhou' % down_nome)
-                    resposta = input('Deseja continuar "s" ou "n": ')
+                    resposta = input('Deseja continuar jogando? Se sim digite s, caso contrário aperte qualquer tecla: ')
                     print('Esperando a resposta de %s... Aguarde...' % down_nome)
 
+                    if resposta.upper() != 'S':
+                        conecxao.close()
+                        print('O jogo acabou.')
+                        acabou = 1
+                        break
+
                     if gameOver(resposta) == True:
+                        cont = 0
                         tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
-                        transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
+                        transposta = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
 
                     else:
                         conecxao.close()
+                        print('%s parou de jogar.' % down_nome)
                         acabou = 1
                         break
             cont += 1
@@ -189,12 +204,10 @@ while modo_jogo == 2:
         try:
             modo_jogo = int(input('Conforme acima, informe 1 ou 2, e escolha o modo para jogar: '))
             if modo_jogo not in [1, 2]:
+                print('')
                 print('Opção inválida. Informe modo 1 ou modo 2.')
                 continue
-
-            print('')
-            print('Obs.: Caso tenha escolhido contra o PC, mas queira mudar o modo do jogo, '
-                  'feche a janela e a opção para mudar o modo irar aparecer!')
             break
         except:
+            print('')
             print('Opção inválido. Informe modo 1 ou modo 2.')
