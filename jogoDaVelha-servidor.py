@@ -1,9 +1,7 @@
 from socket import *
-<<<<<<< HEAD
-=======
 from termcolor import colored
 from minmax import *
->>>>>>> eeac56abd4f2dd45b010ea9caf5f4e1a254c8d72
+
 
 host = 'localhost'
 port = 5000
@@ -117,15 +115,15 @@ while modo_jogo == 1:
                 transposta_matriz(tabuleiro, transposta)
 
                 if gameWin(simbolo, tabuleiro)== True or gameWin(simbolo, transposta) == True:
-<<<<<<< HEAD
+
                     print('ganhou')
                     resposta = input('deseja continuar "s" ou "n": ')
                     if gameOver(resposta)== True:
-=======
+
                     print('%s ganhou' %nome)
                     resposta = input('Deseja continuar "s" ou "n": ')
                     if gameOver(resposta) == True:
->>>>>>> eeac56abd4f2dd45b010ea9caf5f4e1a254c8d72
+
                         tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
                         transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
                         break
