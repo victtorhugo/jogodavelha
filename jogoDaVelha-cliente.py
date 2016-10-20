@@ -3,14 +3,10 @@ from termcolor import colored
 from minmax import *
 
 
-host = "192.168.43.201"
-port = 8000
-tcp = socket(AF_INET, SOCK_STREAM)
-dest = (host, port)
-tcp.connect(dest)
+
 tabuleiro = [['1','2','3'],['4','5','6'],['7','8','9']]
 jogadas = [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]]
-transposta = [['','',''],['','','',],['','','']]
+transposta = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
 diagonal0 = [] 
 diagonal1 = []
 acabou = 0
@@ -59,9 +55,9 @@ def gameOver(resposta):
     resposta_adversario = str(resposta_adversario, 'utf-8')
     resposta = bytes(resposta, 'utf-8')
     tcp.send(resposta)
-    if resposta_adversario == 's':
+    if resposta_adversario.upper() == 'S':
         return True
-    else: return False
+    return False
 
 
 while True:
@@ -74,15 +70,19 @@ while True:
         if modo_jogo not in [1,2]:
             continue
         print('')
-        print('Obs.: Caso tenha escolhido contra o PC, mas queira mudar o modo do jogo, '
-              'feche a janela e a opção para mudar o modo irar aparecer!')
+
         break
     except:
           print('Opção inválida!')
 
 
 while modo_jogo == 1:
-
+    host = "192.168.0.107"
+    port = 8000
+    tcp = socket(AF_INET, SOCK_STREAM)
+    dest = (host, port)
+    tcp.connect(dest)
+    print('Esperando o outro jogador...Aguarde...')
     while True:
         nome = input('digite seu nome: ')
         simbolo = input('%s digite o simbolo: ' %nome)
@@ -105,6 +105,7 @@ while modo_jogo == 1:
     cont = 0
     while True:
         if cont % 2 == 0:
+            imprime(tabuleiro)
             print('Esperando a jogada de %s...' %down_nome)
             recb_posicao = tcp.recv(1024)
             recb_posicao = str(recb_posicao, 'utf-8')
@@ -115,12 +116,19 @@ while modo_jogo == 1:
             transposta_matriz(tabuleiro, transposta)
             if gameWin(down_simb, tabuleiro) == True or gameWin(down_simb, transposta) == True:
                 print ('%s ganhou!' %down_nome)
-                resposta = input('Deseja continuar "s" ou "n": ')
-                print('Esperando a resposta de %s'%down_nome)
-                if gameOver(resposta) == True:
-                    tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
-                    transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
+                resposta = input('Deseja continuar jogando(se sim aperte "s" caso contrario aperte qualquer tecla)? ')
 
+                if resposta.upper() != 'S':
+                    tcp.close()
+                    print('O jogo acabou!')
+                    acabou =1
+                    break
+
+                if gameOver(resposta) == True:
+                    cont = 0
+                    tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
+                    transposta = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
+                    imprime(tabuleiro)
                 else:
                     print('gameover')
                     tcp.close()
@@ -131,34 +139,42 @@ while modo_jogo == 1:
 
             while True:
 
-                while True:
-                    try:
-                        posicao = int(input('Digite a posição(1 a 9) da jogada: ')) - 1
-                        if posicao < 0 or posicao > 8:
-                           print('Posição inexistente. Informe um número de 1 a 9.')
-                           continue
-                    except:
-                        print('Posição inexistente. Informe um número de 1 a 9.')
-                        continue
 
-                    posicao_lista = jogadas[posicao]
-                    if jogada(posicao_lista, tabuleiro, simbolo) == False:
-                        continue
-                    break # corrigir a entrada da posição do cliente
+                try:
+                    posicao = int(input('Digite a posição(1 a 9) da jogada: ')) - 1
+                    if posicao < 0 or posicao > 8:
+                       print('Posição inexistente. Informe um número de 1 a 9.')
+                       continue
+                except:
+                    print('Posição inexistente. Informe um número de 1 a 9.')
+                    continue
 
-            imprime(tabuleiro)
+                posicao_lista = jogadas[posicao]
+                if jogada(posicao_lista, tabuleiro, simbolo) == False:
+                    print('Posição já jogada. Escolha outra posição')
+                    continue
+                break
+
+            #imprime(tabuleiro)
             transposta_matriz(tabuleiro, transposta)
             posicao_lista = jogadas[posicao]
             posicao = bytes(str(posicao), 'utf-8')
             tcp.send(posicao)
 
             if gameWin(simbolo, tabuleiro) == True or gameWin(simbolo, transposta) == True:
+                #imprime(tabuleiro)
                 print('%s ganhou!' %nome)
-                resposta = input('Deseja continuar "s" ou "n": ')
-                if gameOver(resposta) == True:
-                    tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
-                    transposta = [['', '', ''], ['', '', '', ], ['', '', '']]
+                resposta = input('Deseja continuar jogando(se sim aperte "s" caso contrario aperte qualquer tecla)? ')
 
+                if resposta.upper() != 'S':
+                    tcp.close()
+                    print('O jogo acabou!')
+                    acabou =1
+                    break
+                if gameOver(resposta) == True:
+                    cont = 0
+                    tabuleiro = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
+                    transposta = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
                 else:
                     print('Gameover')
                     tcp.close()
@@ -180,8 +196,7 @@ while modo_jogo == 2:
             if modo_jogo == '1' or modo_jogo == '2':
                 continue
             print('')
-            print('Obs.: Caso tenha escolhido contra o PC, mas queira mudar o modo do jogo, '
-                  'feche a janela e a opção para mudar o modo irar aparecer!')
+
             break
         except:
             print('Opção inválida!')
